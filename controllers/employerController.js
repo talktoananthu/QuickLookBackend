@@ -1,6 +1,6 @@
 const { MongoClient } = require('mongodb');
 const nodemailer = require('nodemailer');
-
+require('dotenv').config(); 
 const client = new MongoClient(process.env.MONGO_URI);
 const { BSON } = require("bson");
 const bcrypt = require('bcrypt')
@@ -692,13 +692,16 @@ const ResetPasswordForEmployer = async (req, res) => {
     console.log(' OTP generated for', email, ':', otp);
 
     // Step 3: Send OTP via Gmail using Nodemailer
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: 'talktoananthu@gmail.com',       // Replace with your Gmail
-        pass: 'evwm ygms zodb gnnp',         // Use Gmail App Password  
-      },
-    });
+   const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+  pool: true,          // keep connection alive
+  maxConnections: 5,
+  maxMessages: 100,
+});
 
     const mailOptions = {
       from: '"QuickLook Support" <samplegmail@gmail.com>',
