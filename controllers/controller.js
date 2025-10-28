@@ -83,7 +83,7 @@ const postEmployerDetails = async (req, res) => {
       const employData = req.body;
       employData.employId = Date.now();
 
-      // 🔄 Added: Check for duplicate email
+      //  Added: Check for duplicate email
       const existingEmployer = await collectionEmployer.findOne({ email: employData.email });
       if (existingEmployer) {
         return res.status(409).json({ message: 'Email already registered' });
