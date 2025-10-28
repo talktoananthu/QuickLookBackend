@@ -8,7 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Basic CORS
-app.use(cors({ origin: 'http://localhost:4200' }));
+app.use(cors({ origin: 'https://find-quick.vercel.app' }));
 
 // JSON parser
 app.use(express.json());
