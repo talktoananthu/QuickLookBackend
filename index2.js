@@ -1,5 +1,4 @@
-require('dotenv').config(); // Load env variables
-
+require('dotenv').config(); // Load environment variables
 const express = require('express');
 const cors = require('cors');
 const routes = require('./routes/route');
@@ -7,14 +6,28 @@ const routes = require('./routes/route');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Basic CORS
-app.use(cors({ origin: 'https://find-quick.vercel.app' }));
+//  Enable CORS for both local dev and live frontend
+app.use(cors({
+  origin: [
+    'http://localhost:4200',        // for local Angular dev
+    'https://find-quick.vercel.app' // for production frontend
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
 
-// JSON parser
+//  JSON body parser
 app.use(express.json());
 
-// Routes
+//  API routes
 app.use('/', routes);
 
-// Start server
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+//  Default route (optional but nice for testing)
+app.get('/', (req, res) => {
+  res.send('Backend server is running successfully ');
+});
+
+//  Start server
+app.listen(PORT, () => {
+  console.log(` Server running on port ${PORT}`);
+});
