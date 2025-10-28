@@ -134,7 +134,7 @@ const getPostedJobs = async (req, res) => {
 
     if (!jobs.length) {
       console.log('no data')
-      return res.status(404).json({ message: 'No jobs found for this employer' });
+     return res.status(200).json([]);
     }
      else{
       console.log('sucess in getting jobs')
