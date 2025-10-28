@@ -9,8 +9,10 @@ const PORT = process.env.PORT || 3000;
 //  Enable CORS for both local dev and live frontend
 app.use(cors({
   origin: [
-    'http://localhost:4200',        // for local Angular dev
-    'https://find-quick.vercel.app' // for production frontend
+    'http://localhost:4200',
+    'https://find-quick.vercel.app',
+    'https://find-quick-fiue96s3q-ananthu-ps-projects.vercel.app',
+    'https://find-quick-talktoananthu-6681-ananthu-ps-projects.vercel.app'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
