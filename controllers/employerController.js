@@ -1,5 +1,6 @@
 const { MongoClient } = require('mongodb');
 const nodemailer = require('nodemailer');
+const fetch = require("node-fetch");
 require('dotenv').config(); 
 const client = new MongoClient(process.env.MONGO_URI);
 const { BSON } = require("bson");
@@ -20,20 +21,45 @@ const { constants } = require('buffer');
 
 // Convert text address to lat/lng using OpenStreetMap
 async function geocodeAddress(address) {
-  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
-  const res = await axios.get(url, {
-    headers: { 'User-Agent': 'JobAppBackend' } // required by OSM
-  });
+  try {
+    // Clean up address (remove door numbers and stray commas)
+    const cleanedAddress = address
+      .replace(/^\s*,/, '')
+      .replace(/\d+\/\d+,\s*/g, '') // remove like "23/451,"
+      .trim();
 
-  if (res.data.length > 0) {
-    return {
-      lat: parseFloat(res.data[0].lat),
-      lng: parseFloat(res.data[0].lon)
-    };
+    console.log('Geocoding address:', cleanedAddress);
+
+    // Step 1: Try full cleaned address
+    let url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleanedAddress)}`;
+    console.log('Fetching from:', url);
+    let res = await axios.get(url, { headers: { 'User-Agent': 'JobAppBackend' } });
+
+    // Step 2: If no result, retry with simplified version (drop street name)
+    if (!res.data || res.data.length === 0) {
+      console.warn("No result for full address. Retrying with reduced address...");
+      const parts = cleanedAddress.split(',').slice(-3).join(','); // take last 3 parts like "Edappally, Kochi, Kerala, India"
+      const retryUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(parts)}`;
+      console.log('Retrying with:', retryUrl);
+      res = await axios.get(retryUrl, { headers: { 'User-Agent': 'JobAppBackend' } });
+    }
+
+    if (res.data && res.data.length > 0) {
+      const result = {
+        lat: parseFloat(res.data[0].lat),
+        lng: parseFloat(res.data[0].lon)
+      };
+      console.log('Geocode result:', result);
+      return result;
+    }
+
+    console.log(' Geocode result: null (no matches found)');
+    return null;
+  } catch (error) {
+    console.error('Error during geocoding:', error.message);
+    return null;
   }
-  return null;
 }
-
 async function connectDB() {
   try {
     await client.connect(); // connect without passing URL again, already passed in constructor
@@ -69,6 +95,7 @@ const postJobDetails = async (req, res) => {
     let jobPostId;
     let isUnique = false;
 
+   console.log('req body',req.body) 
     while (!isUnique) {
       jobPostId = generateSimpleJobPostId();
       const existing = await collectionPostedJobs.findOne({ jobPostId });
@@ -83,10 +110,11 @@ const postJobDetails = async (req, res) => {
     if (req.body.location) {
       let locationData = req.body.location;
 
-      // ✅ FIX: Parse if it's a stringified JSON
+      //  FIX: Parse if it's a stringified JSON
       if (typeof locationData === 'string') {
         try {
           locationData = JSON.parse(locationData);
+          
         } catch (err) {
           console.error("Failed to parse location JSON:", err);
         }
