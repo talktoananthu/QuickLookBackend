@@ -81,14 +81,25 @@ const postJobDetails = async (req, res) => {
     // -------------------- ADDED: Generate coordinates from location --------------------
     let locationCoordinates = null;
     if (req.body.location) {
+      let locationData = req.body.location;
+
+      // ✅ FIX: Parse if it's a stringified JSON
+      if (typeof locationData === 'string') {
+        try {
+          locationData = JSON.parse(locationData);
+        } catch (err) {
+          console.error("Failed to parse location JSON:", err);
+        }
+      }
+
       let addressString = '';
-      if (typeof req.body.location === 'object') {
-        const { area = '', city = '', state = '' } = req.body.location;
+      if (typeof locationData === 'object') {
+        const { area = '', city = '', state = '' } = locationData;
         //  Added ", India" here
         addressString = `${area.trim()}, ${city.trim()}, ${state.trim()}, India`;
       } else {
         //  Added ", India" here
-        addressString = `${req.body.location.trim()}, India`;
+        addressString = `${locationData.trim()}, India`;
       }
 
       if (addressString) {
